@@ -84,34 +84,6 @@ The project demonstrates a complete pipeline including **data collection, prepro
 
 ---
 
-## Project Architecture
-
-flowchart LR
-
-A[External APIs\n(AQICN / OpenWeather)] --> B[Data Extraction]
-
-B --> C[Feature Engineering Pipeline]
-C --> D[Feature Store\n(Hopsworks / Vertex AI)]
-
-D --> E[Training Pipeline]
-E --> F[Model Training\n(Random Forest / Ridge / TensorFlow)]
-F --> G[Model Registry]
-
-D --> H[Prediction Pipeline]
-G --> H
-
-H --> I[Real-Time Predictions]
-
-I --> J[Web Dashboard\n(Streamlit / Flask)]
-
-subgraph Automation
-K[Airflow / GitHub Actions]
-end
-
-K --> C
-K --> E
----
-
 ## **Example Use Case**
 
 A user can view predicted AQI levels for the next three days and take precautionary measures if hazardous conditions are expected.
