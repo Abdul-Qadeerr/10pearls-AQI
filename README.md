@@ -1,4 +1,3 @@
----
 
 # **Pearls AQI Predictor**
 
