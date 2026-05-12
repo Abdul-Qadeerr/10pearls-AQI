@@ -1,6 +1,6 @@
 
 # **Pearls AQI Predictor**
-
+ 
 AI-Powered Air Quality Forecasting System (3-Day Prediction)
  
 ---
