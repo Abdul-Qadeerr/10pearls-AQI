@@ -1,0 +1,40 @@
+<<<<<<< HEAD
+pandas==2.1.4
+=======
+# Data & ML
+pandas==2.2.2
+>>>>>>> 9b33817ba7e626b3796cebcd8f80b182a332677a
+numpy==1.26.4
+scikit-learn==1.4.2
+tensorflow==2.16.1
+shap==0.45.0
+<<<<<<< HEAD
+requests==2.31.0
+python-dotenv==1.0.1
+hopsworks==3.7.0
+streamlit==1.35.0
+flask==3.0.3
+plotly==5.22.0
+joblib==1.4.2
+pytz==2024.1
+=======
+
+# API calls
+requests==2.31.0
+python-dotenv==1.0.1
+
+# Feature Store
+hopsworks==3.7.0
+
+# Dashboard
+streamlit==1.35.0
+flask==3.0.3
+plotly==5.22.0
+
+# Scheduling / CI
+# (GitHub Actions handles scheduling — no extra lib needed)
+
+# Utilities
+joblib==1.4.2
+pytz==2024.1
+>>>>>>> 9b33817ba7e626b3796cebcd8f80b182a332677a

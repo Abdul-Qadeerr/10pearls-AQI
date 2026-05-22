@@ -1,0 +1,53 @@
+# .github/workflows/feature_pipeline.yml
+# ─────────────────────────────────────────
+# Runs the feature pipeline every hour automatically.
+# Fetches AQI + weather → computes features → uploads to Hopsworks.
+
+name: Hourly Feature Pipeline
+
+on:
+  schedule:
+    - cron: "0 * * * *"    # every hour at :00
+  workflow_dispatch:        # also lets you run manually from GitHub UI
+
+jobs:
+  run-feature-pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+
+      # 1. Checkout your code
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      # 2. Setup Python
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # 3. Cache pip packages (speeds up runs)
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: ${{ runner.os }}-pip-
+
+      # 4. Install dependencies
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # 5. Run the full pipeline
+      #    Secrets are stored in GitHub → Settings → Secrets and variables → Actions
+      - name: Run feature pipeline
+        env:
+          AQICN_API_KEY:        ${{ secrets.AQICN_API_KEY }}
+          OPENWEATHER_API_KEY:  ${{ secrets.OPENWEATHER_API_KEY }}
+          HOPSWORKS_API_KEY:    ${{ secrets.HOPSWORKS_API_KEY }}
+          HOPSWORKS_PROJECT:    ${{ secrets.HOPSWORKS_PROJECT }}
+          CITY_NAME:            ${{ vars.CITY_NAME }}
+          CITY_LAT:             ${{ vars.CITY_LAT }}
+          CITY_LON:             ${{ vars.CITY_LON }}
+        run: python -m feature_pipeline.upload_to_hopsworks
