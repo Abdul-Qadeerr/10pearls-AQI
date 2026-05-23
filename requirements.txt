@@ -6,8 +6,4 @@ requests
 python-dotenv
 hopsworks
 streamlit
-flask
-plotly
-joblib
-pytz
 tensorflow-cpu==2.16.1
