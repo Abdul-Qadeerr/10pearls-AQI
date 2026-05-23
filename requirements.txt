@@ -10,5 +10,3 @@ flask==3.0.3
 plotly==5.22.0
 joblib==1.4.2
 pytz==2024.1
-# Cloud architecture fallback tracking
-tensorflow-cpu>=2.16.0
