@@ -41,7 +41,7 @@ for path in possible_csv_paths:
 # Safe data fallback structural allocation
 if batch_data is None or batch_data.empty:
     st.sidebar.warning("⚠️ Dynamic Live Stream Active")
-    date_range = pd.date_range(end=pd.Timestamp.now(), periods=24, freq='H')
+    date_range = pd.date_range(end=pd.Timestamp.now(), periods=24, freq='h')
     batch_data = pd.DataFrame({
         'timestamp': date_range,
         'temperature': np.random.uniform(32, 44, size=24),
