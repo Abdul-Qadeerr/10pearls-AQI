@@ -10,17 +10,5 @@ flask==3.0.3
 plotly==5.22.0
 joblib==1.4.2
 pytz==2024.1
-tensorflow-cpu==2.16.1
-pandas==2.1.4
-numpy==1.26.4
-scikit-learn==1.4.2
-shap==0.45.0
-requests==2.31.0
-python-dotenv==1.0.1
-hopsworks==3.7.0
-streamlit==1.35.0
-flask==3.0.3
-plotly==5.22.0
-joblib==1.4.2
-pytz==2024.1
-tensorflow-cpu==2.16.1
+# Cloud architecture fallback tracking
+tensorflow-cpu>=2.16.0
