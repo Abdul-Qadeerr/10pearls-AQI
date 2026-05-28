@@ -1,0 +1,46 @@
+# .github/workflows/training_pipeline.yml
+# -----------------------------------------
+# Runs the training pipeline every day at 02:00 UTC.
+# Fetches features from Hopsworks, trains RF + LSTM, saves best model to registry.
+
+name: Daily Training Pipeline
+
+on:
+  schedule:
+    - cron: "0 2 * * *"      # every day at 02:00 UTC
+  workflow_dispatch:           # also allows manual trigger from GitHub UI
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run training pipeline
+        env:
+          HOPSWORKS_API_KEY:   ${{ secrets.HOPSWORKS_API_KEY }}
+          HOPSWORKS_PROJECT:   ${{ secrets.HOPSWORKS_PROJECT }}
+          AQICN_API_KEY:       ${{ secrets.AQICN_API_KEY }}
+          OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
+          CITY_NAME:           ${{ vars.CITY_NAME }}
+          CITY_LAT:            ${{ vars.CITY_LAT }}
+          CITY_LON:            ${{ vars.CITY_LON }}
+        run: python -m training_pipeline.train
