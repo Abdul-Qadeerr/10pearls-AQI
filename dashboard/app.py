@@ -12,7 +12,7 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("🌫️ K Real-Time AQI Air Quality Predictive System")
+st.title("🌫️ Karachi Real-Time AQI Air Quality Predictive System")
 st.markdown("Automated Machine Learning execution pipeline with **Production Model Inference**.")
 st.markdown("---")
 
