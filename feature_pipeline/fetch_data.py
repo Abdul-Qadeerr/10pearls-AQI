@@ -7,9 +7,9 @@ load_dotenv()
 
 AQICN_KEY = os.getenv("AQICN_API_KEY")
 OW_KEY    = os.getenv("OPENWEATHER_API_KEY")
-CITY_NAME = os.getenv("CITY_NAME", "Kandhkot")
-LAT       = float(os.getenv("CITY_LAT", 28.2435))
-LON       = float(os.getenv("CITY_LON", 69.1832))
+CITY_NAME = os.getenv("CITY_NAME", "Karachi")
+LAT       = float(os.getenv("CITY_LAT", 24.8607))
+LON       = float(os.getenv("CITY_LON", 67.0011))
 
 
 def fetch_aqicn():

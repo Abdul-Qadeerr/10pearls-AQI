@@ -32,9 +32,9 @@ AQICN_KEY         = os.getenv("AQICN_API_KEY")
 OW_KEY            = os.getenv("OPENWEATHER_API_KEY")
 HOPSWORKS_API_KEY = os.getenv("HOPSWORKS_API_KEY")
 HOPSWORKS_PROJECT = os.getenv("HOPSWORKS_PROJECT", "aqi_predictor")
-CITY_NAME         = os.getenv("CITY_NAME", "Kandhkot")
-LAT               = float(os.getenv("CITY_LAT", 28.2435))
-LON               = float(os.getenv("CITY_LON", 69.1832))
+CITY_NAME         = os.getenv("CITY_NAME", "Karachi")
+LAT               = float(os.getenv("CITY_LAT", 24.8607))
+LON               = float(os.getenv("CITY_LON", 67.0011))
 
 FEATURE_GROUP_NAME = "aqi_features"
 FEATURE_GROUP_VER  = 1
@@ -248,7 +248,7 @@ def run():
     # Also save local CSV as fallback cache
     csv_dir  = os.path.join(os.path.dirname(__file__), "data")
     os.makedirs(csv_dir, exist_ok=True)
-    csv_path = os.path.join(csv_dir, "kandhkot_aqi_data.csv")
+    csv_path = os.path.join(csv_dir, "karachi_aqi_data.csv")
     df.to_csv(csv_path, index=False)
     print("Local cache saved: {}".format(csv_path))
     print("Backfill complete. {} records ready for training.".format(len(df)))

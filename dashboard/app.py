@@ -7,12 +7,12 @@ import os
 from pathlib import Path
 
 st.set_page_config(
-    page_title="Kandhkot AQI Predictor & Monitor",
+    page_title="Karachi AQI Predictor & Monitor",
     page_icon="🌫️",
     layout="wide"
 )
 
-st.title("🌫️ Kandhkot Real-Time AQI Air Quality Predictive System")
+st.title("🌫️ K Real-Time AQI Air Quality Predictive System")
 st.markdown("Automated Machine Learning execution pipeline with **Production Model Inference**.")
 st.markdown("---")
 
@@ -21,11 +21,11 @@ project_root = current_file.parent.parent
 
 # 1. LOAD DATA WITH MULTIPLE PATH FALLBACKS
 possible_csv_paths = [
-    project_root / "kandhkot_aqi_data.csv",
-    project_root / "data" / "kandhkot_aqi_data.csv",
-    project_root / "feature_pipeline" / "kandhkot_aqi_data.csv",
-    current_file.parent / "kandhkot_aqi_data.csv",
-    Path("kandhkot_aqi_data.csv")
+    project_root / "karachi_aqi_data.csv",
+    project_root / "data" / "karachi_aqi_data.csv",
+    project_root / "feature_pipeline" / "karachi_aqi_data.csv",
+    current_file.parent / "karachi_aqi_data.csv",
+    Path("karachi_aqi_data.csv")
 ]
 
 batch_data = None
@@ -63,7 +63,7 @@ else:
     st.sidebar.success("✅ **GOOD:** Air Quality is acceptable and safe.")
 
 # 3. ML MODEL PREDICTIONS INTERACTION
-model_path = project_root / "models" / "aqi_kandhkot_model.pkl"
+model_path = project_root / "models" / "aqi_karachi_model.pkl"
 model_loaded = False
 
 if model_path.exists():
@@ -116,5 +116,5 @@ with col_right:
     st.plotly_chart(fig_shap, use_container_width=True)
 
 st.markdown("---")
-st.subheader("📊 Historical Feature Streams Data View (Kandhkot)")
+st.subheader("📊 Historical Feature Streams Data View (Karachi)")
 st.dataframe(batch_data.tail(5), use_container_width=True)
