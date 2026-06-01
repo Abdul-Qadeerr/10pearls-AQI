@@ -6,7 +6,7 @@ An end-to-end serverless Machine Learning pipeline that predicts the Air Quality
 
 ## 🔗 Project Links
 
-- **Live Dashboard:** [https://kandhkot-aqi-predictor.streamlit.app/](https://kandhkot-aqi-predictor.streamlit.app/)
+- **Live Dashboard:** [https://karachi-aqi-monitor.streamlit.app/](https://kandhkot-aqi-predictor.streamlit.app/)
 - **GitHub Repository:** [https://github.com/Abdul-Qadeerr/10pearls-AQI](https://github.com/Abdul-Qadeerr/10pearls-AQI)
 
 ---
