@@ -1,4 +1,4 @@
-# 🌫️ AQI Predictor — Serverless MLOps Pipeline for Air Quality Forecasting
+# 🌫️ AQI Predictor - Serverless MLOps Pipeline for Air Quality Forecasting
 
 [![Python 3.10](https://img.shields.io/badge/Python-3.10-blue.svg)](https://www.python.org/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=flat&logo=Streamlit&logoColor=white)](https://streamlit.io/)
@@ -7,7 +7,7 @@
 [![Hopsworks](https://img.shields.io/badge/Hopsworks-FF6B00?style=flat&logo=apache&logoColor=white)](https://www.hopsworks.ai/)
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-Streamlit-brightgreen)](https://karachi-aqi-monitor.streamlit.app/)
 
-> **🏆 10Pearls Internship Program | Cohort 8 | IBA Sukkur University**
+> **🏆 10Pearls Internship Program | Cohort 8 | Abdul Qadeer | Sukkur IBA University**
 
 An **end-to-end serverless Machine Learning pipeline** that predicts the Air Quality Index (AQI) for **Karachi, Sindh, Pakistan** for the next 3 days. The system automates data ingestion, feature storage, model training, and deployment using a **production-grade MLOps architecture**.
 
@@ -23,14 +23,6 @@ An **end-to-end serverless Machine Learning pipeline** that predicts the Air Qua
 
 ---
 
-## 📸 Dashboard Preview
-
-![Karachi AQI Dashboard Full View](images/dashboard_full.png)
-
-*Figure 1: Real-time AQI monitoring dashboard with hazard alerts and 3-day forecast*
-
----
-
 ## 🚀 Features
 
 | Feature | Description |
@@ -38,78 +30,89 @@ An **end-to-end serverless Machine Learning pipeline** that predicts the Air Qua
 | 🤖 **Automated Data Pipeline** | Hourly data fetching from AQICN + OpenWeather APIs |
 | 💾 **Serverless Feature Store** | Production-grade feature management via Hopsworks |
 | 🧠 **Multi-Model Evaluation** | Random Forest + LSTM with automatic best-model selection |
-| ⚙️ **CI/CD Automation** | GitHub Actions (hourly feature update / daily retraining) |
-| 📊 **Interactive Dashboard** | Streamlit UI with real-time AQI, forecasts, and hazard alerts |
+| ⚙️ **CI/CD Automation** | GitHub Actions — hourly feature update + daily retraining |
+| 📊 **Interactive Dashboard** | Streamlit UI with real-time AQI, EDA charts, and hazard alerts |
 | 🔬 **Model Explainability** | SHAP TreeExplainer plots for feature importance |
 | 📧 **Email Alerts** | Automatic email notifications for hazardous AQI levels |
+| 📈 **EDA Section** | Historical trend, distribution, hourly pattern, correlation heatmap |
 | 💾 **Fallback Cache** | Local CSV backup when APIs are unavailable |
 
 ---
 
-## 📈 3-Day AQI Forecast
-
-![3-Day AQI Forecast Chart](images/forecast_chart.png)
-
-*Figure 2: Predictive AQI trendline using Random Forest model with shaded AQI zones (Green=Good, Yellow=Moderate, Orange=Unhealthy, Red=Hazardous)*
-
----
-
-## 🧬 SHAP Feature Importance
-
-![SHAP Feature Importance](images/shap_importance.png)
-
-*Figure 3: Top 8 features driving AQI predictions — PM2.5 lag and temperature are the most influential*
-
----
-
-## 📊 Exploratory Data Analysis
-
-![EDA Time Series](images/eda_timeseries.png)
-
-*Figure 4: Historical AQI trend with hazard thresholds (Moderate: 100, Hazardous: 150)*
-
----
-
 ## 🛠️ System Architecture
+
+```
 ┌─────────────────────────────────────────────────────────────────┐
-│ AQI PREDICTIVE SYSTEM │
+│                     AQI PREDICTIVE SYSTEM                       │
 ├─────────────────────────────────────────────────────────────────┤
-│ │
-│ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ │
-│ │ AQICN API │ │ OpenWeather │ │ Hopsworks │ │
-│ │ (Hourly) │ │ API │ │ Feature Store│ │
-│ └──────┬───────┘ └──────┬───────┘ └──────┬───────┘ │
-│ │ │ │ │
-│ └─────────┬─────────┘ │ │
-│ │ │ │
-│ ▼ │ │
-│ ┌─────────────────────┐ │ │
-│ │ Feature Pipeline │─────────────────┘ │
-│ │ (GitHub Actions) │ │
-│ └─────────┬───────────┘ │
-│ │ │
-│ ▼ │
-│ ┌─────────────────────┐ │
-│ │ Training Pipeline │ │
-│ │ (Daily Retraining) │ │
-│ └─────────┬───────────┘ │
-│ │ │
-│ ▼ │
-│ ┌─────────────────────┐ │
-│ │ Streamlit Dashboard│ │
-│ │ (Real-time UI) │ │
-│ └─────────────────────┘ │
-│ │
+│                                                                 │
+│  ┌──────────────┐   ┌──────────────┐   ┌──────────────┐        │
+│  │  AQICN API   │   │ OpenWeather  │   │  Hopsworks   │        │
+│  │  (Hourly)    │   │     API      │   │ Feature Store│        │
+│  └──────┬───────┘   └──────┬───────┘   └──────┬───────┘        │
+│         │                  │                  │                 │
+│         └────────┬─────────┘                  │                 │
+│                  │                            │                 │
+│                  ▼                            │                 │
+│     ┌─────────────────────┐                  │                 │
+│     │   Feature Pipeline  │──────────────────┘                 │
+│     │   (GitHub Actions)  │                                     │
+│     └──────────┬──────────┘                                     │
+│                │                                                │
+│                ▼                                                │
+│     ┌─────────────────────┐                                     │
+│     │  Training Pipeline  │                                     │
+│     │  (Daily Retraining) │                                     │
+│     └──────────┬──────────┘                                     │
+│                │                                                │
+│                ▼                                                │
+│     ┌─────────────────────┐                                     │
+│     │ Streamlit Dashboard │                                     │
+│     │  (Real-time UI)     │                                     │
+│     └─────────────────────┘                                     │
+│                                                                 │
 └─────────────────────────────────────────────────────────────────┘
+```
+
 ### Data Flow
 
 1. **Hourly Trigger** → GitHub Actions cron job activates
 2. **Data Ingestion** → AQICN + OpenWeather APIs fetch raw data
 3. **Feature Engineering** → 27 features generated (cyclical encoding, lag features)
 4. **Feature Store** → Data uploaded to Hopsworks (fallback: local CSV)
-5. **Daily Training** → Random Forest + LSTM models trained
+5. **Daily Training** → Random Forest + LSTM models trained and evaluated
 6. **Model Registry** → Best model saved to `models/` folder
-7. **Dashboard** → Streamlit loads model and shows predictions
+7. **Dashboard** → Streamlit loads model and shows predictions + EDA
+
+---
+
+## 📂 Project Structure
+
+```
+aqi-predictor/
+├── .github/workflows/
+│   ├── feature_pipeline.yml      # Hourly data ingestion
+│   └── training_pipeline.yml     # Daily model retraining
+├── feature_pipeline/
+│   ├── fetch_data.py             # API integration
+│   ├── compute_features.py       # 27-feature engineering
+│   ├── upload_to_hopsworks.py    # Feature store upload
+│   └── backfill_pipeline.py      # 90-day historical backfill
+├── training_pipeline/
+│   └── train.py                  # RF + LSTM training
+├── dashboard/
+│   └── app.py                    # Streamlit UI
+├── models/
+│   ├── model_rf_24h.pkl          # Random Forest — 24h forecast
+│   ├── model_rf_48h.pkl          # Random Forest — 48h forecast
+│   ├── model_rf_72h.pkl          # Random Forest — 72h forecast
+│   ├── scaler.pkl                # Feature scaler
+│   └── model_info.json           # Model metrics (RMSE, MAE, R²)
+├── data/
+│   └── karachi_aqi_data.csv      # 90-day historical cache
+├── requirements.txt
+└── README.md
+```
 
 ---
 
@@ -127,49 +130,10 @@ An **end-to-end serverless Machine Learning pipeline** that predicts the Air Qua
 
 ---
 
-## 📂 Project Structure
-aqi-predictor/
-├── .github/workflows/
-│ ├── feature_pipeline.yml # Hourly data ingestion
-│ └── training_pipeline.yml # Daily model retraining
-├── feature_pipeline/
-│ ├── fetch_data.py # API integration
-│ ├── compute_features.py # 27-feature engineering
-│ ├── upload_to_hopsworks.py # Feature store upload
-│ └── backfill_pipeline.py # 90-day historical backfill
-├── training_pipeline/
-│ └── train.py # RF + LSTM training
-├── dashboard/
-│ └── app.py # Streamlit UI
-├── data/
-│ └── karachi_aqi_data.csv # 90-day historical cache
-├── images/ # README screenshots
-├── requirements.txt
-└── README.md
-
----
-
-## ✅ Component Verification Status
-
-| Component | Status | Verification |
-|-----------|--------|--------------|
-| Feature Ingestion | 🟢 **LIVE** | Hourly GitHub Actions logs |
-| Feature Engineering | 🟢 **LIVE** | 27 features generated |
-| Hopsworks Upload | 🟢 **LIVE** | 720 records stored |
-| Backfill Pipeline | 🟢 **LIVE** | 90 days historical data |
-| Model Training (RF) | 🟢 **LIVE** | RMSE: 22.45 |
-| Model Training (LSTM) | 🟢 **LIVE** | Trained (RF selected) |
-| Streamlit Dashboard | 🟢 **LIVE** | Accessible online |
-| SHAP Explainability | 🟢 **LIVE** | TreeExplainer working |
-| Hazard Alert System | 🟢 **LIVE** | Color-coded banners |
-| Email Alerts | 🟢 **LIVE** | Automatic on hazardous AQI |
-
----
-
 ## 📊 Model Performance
 
 | Model | Horizon | RMSE | MAE | R² |
-|-------|---------|------|-----|-----|
+|-------|---------|------|-----|----|
 | Random Forest | 24h | 18.62 | 14.1 | 0.31 |
 | Random Forest | 48h | 23.63 | 18.2 | -0.10 |
 | Random Forest | 72h | 25.10 | 19.8 | -0.21 |
@@ -179,45 +143,85 @@ aqi-predictor/
 
 **Selected Model:** Random Forest (Avg RMSE: 22.45 vs LSTM: 73.48)
 
----
-
-## 💡 Key Engineering Decisions
-
-| Decision | Rationale |
-|----------|-----------|
-| **tensorflow-cpu over tensorflow** | Eliminated OOM Exit Code 137 on GitHub Actions free runners |
-| **Cyclical Temporal Encoding** | sin/cos encoding for hour/day/month improved RMSE significantly |
-| **RF over LSTM** | With 720 records, RF outperformed LSTM (22.45 vs 73.48 RMSE) |
-| **Defensive Programming** | `pd.to_numeric().fillna()` prevents schema failures |
-| **Fallback Cache** | Local CSV backup ensures pipeline runs even if Hopsworks fails |
+> **Note on R²:** Negative R² for 48h and 72h horizons is expected with synthetic backfill data.
+> With real historical API data, these metrics will improve significantly.
 
 ---
+
 
 ## 🛠️ Setup Instructions
 
 ### Prerequisites
+
 - Python 3.10
 - Hopsworks Account (Free Tier)
-- AQICN API Key ([Get here](https://aqicn.org/data-platform/token/))
-- OpenWeather API Key ([Get here](https://openweathermap.org/api))
+- AQICN API Key — [Get here](https://aqicn.org/data-platform/token/)
+- OpenWeather API Key — [Get here](https://openweathermap.org/api)
 
-### Installation
+### Environment Variables
+
+Create a `.env` file in the project root:
+
+```env
+AQICN_TOKEN=your_aqicn_token
+OPENWEATHER_API_KEY=your_openweather_key
+HOPSWORKS_API_KEY=your_hopsworks_key
+CITY_NAME=Karachi
+CITY_LAT=24.8607
+CITY_LON=67.0011
+
+
+### Run Commands
 
 ```bash
-# Clone repository
-git clone https://github.com/Abdul-Qadeerr/10pearls-AQI
-cd 10pearls-AQI
-
-# Create virtual environment
-python -m venv venv
-
-# Windows
-venv\Scripts\activate
-
-# Mac/Linux
-source venv/bin/activate
-
 # Install dependencies
 pip install -r requirements.txt
-Environment Configuration
 
+# Run backfill (one time — generates 90 days historical data)
+python -m feature_pipeline.backfill_pipeline
+
+# Train models
+python -m training_pipeline.train
+
+# Launch dashboard locally
+streamlit run dashboard/app.py
+
+# Run feature pipeline manually
+python -m feature_pipeline.upload_to_hopsworks
+```
+
+---
+
+## 🔮 Replication for Other Cities
+
+To adapt for other cities (Hyderabad, Sukkur, Lahore):
+
+1. Update coordinates in `.env` file:
+
+```env
+CITY_NAME=Lahore
+CITY_LAT=31.5204
+CITY_LON=74.3587
+```
+
+2. Run backfill pipeline for new location
+3. Retrain models
+4. Dashboard auto-updates with new data
+
+The pipeline is fully parameterized — just change `CITY_NAME`, `CITY_LAT`, and `CITY_LON`.
+
+---
+
+## 👤 Author
+
+**Abdul Qadeer**
+
+- 10Pearls Internship Program — Cohort 8
+- Sukkur IBA University
+- [GitHub Profile](https://github.com/Abdul-Qadeerr)
+
+---
+
+## 📄 License
+
+This project is part of the **10Pearls Shine Internship Program (Cohort 8)**.
