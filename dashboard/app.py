@@ -1,22 +1,46 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 import numpy as np
 import joblib
 import json
 import os
 from pathlib import Path
+from datetime import datetime, timedelta
 
+# ── PAGE CONFIGURATION ──────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="Karachi AQI Predictor & Monitor",
     page_icon="🌫️",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-st.title("🌫️ Karachi Real-Time AQI Air Quality Predictive System")
-st.markdown("Automated Machine Learning execution pipeline with **Production Model Inference**.")
-st.markdown("---")
+# ── CUSTOM CSS FOR BETTER DESIGN ───────────────────────────────────────────────
+st.markdown("""
+<style>
+    .main-title {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        padding: 1.5rem;
+        border-radius: 15px;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+    .hazard-good { background: linear-gradient(135deg, #00b09b, #96c93d); padding: 1rem; border-radius: 10px; color: white; text-align: center; font-weight: bold; }
+    .hazard-moderate { background: linear-gradient(135deg, #f2994a, #f2c94c); padding: 1rem; border-radius: 10px; color: white; text-align: center; font-weight: bold; }
+    .hazard-unhealthy { background: linear-gradient(135deg, #eb3349, #f45c43); padding: 1rem; border-radius: 10px; color: white; text-align: center; font-weight: bold; }
+    .hazard-hazardous { background: linear-gradient(135deg, #7f00ff, #e100ff); padding: 1rem; border-radius: 10px; color: white; text-align: center; font-weight: bold; }
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+    }
+    h1, h2, h3 {
+        font-weight: 600 !important;
+    }
+</style>
+""", unsafe_allow_html=True)
 
+# ── INITIALIZATION ─────────────────────────────────────────────────────────────
 current_file = Path(__file__).resolve()
 project_root = current_file.parent.parent
 
@@ -29,322 +53,391 @@ FEATURE_COLUMNS = [
     "aqi_change_rate", "aqi_rolling_3h",
 ]
 
-# ── 1. LOAD DATA ──────────────────────────────────────────────────────────────
-possible_csv_paths = [
-    project_root / "karachi_aqi_data.csv",
-    project_root / "data" / "karachi_aqi_data.csv",
-    project_root / "feature_pipeline" / "karachi_aqi_data.csv",
-    current_file.parent / "karachi_aqi_data.csv",
-    Path("karachi_aqi_data.csv"),
-]
+# ── 1. LOAD DATA ────────────────────────────────────────────────────────────────
+@st.cache_data(ttl=3600, show_spinner="Loading AQI data...")
+def load_batch_data():
+    possible_csv_paths = [
+        project_root / "karachi_aqi_data.csv",
+        project_root / "data" / "karachi_aqi_data.csv",
+        project_root / "feature_pipeline" / "karachi_aqi_data.csv",
+        project_root / "feature_pipeline" / "data" / "karachi_aqi_data.csv",
+        current_file.parent / "karachi_aqi_data.csv",
+        Path("karachi_aqi_data.csv"),
+    ]
+    
+    for path in possible_csv_paths:
+        if path.exists():
+            try:
+                df = pd.read_csv(path)
+                st.sidebar.success(f"✅ Data Source: `{path}`")
+                return df, path.name
+            except Exception as e:
+                st.sidebar.warning(f"⚠️ Error reading {path.name}: {e}")
+                continue
+    
+    st.sidebar.error("❌ No CSV found! Please ensure karachi_aqi_data.csv exists.")
+    st.sidebar.info("📁 Expected locations:\n- `aqi-predictor/karachi_aqi_data.csv`\n- `aqi-predictor/feature_pipeline/data/karachi_aqi_data.csv`")
+    st.stop()
 
-batch_data = None
-for path in possible_csv_paths:
-    if path.exists():
-        try:
-            batch_data = pd.read_csv(path)
-            st.sidebar.success(f"✅ Loaded Feature Stream: {path.name}")
-            break
-        except Exception:
-            pass
+batch_data, data_source = load_batch_data()
 
-if batch_data is None or batch_data.empty:
-    st.sidebar.warning("⚠️ Dynamic Live Stream Active")
-    date_range = pd.date_range(end=pd.Timestamp.now(), periods=24, freq="h")
-    batch_data = pd.DataFrame({
-        "timestamp":   date_range,
-        "temperature": np.random.uniform(32, 44, size=24),
-        "humidity":    np.random.uniform(20, 60, size=24),
-        "aqi":         np.random.uniform(95, 175, size=24),
-    })
-
-batch_data.columns = [c.lower() for c in batch_data.columns]
-# Extract hour from timestamp if not present (fixes hourly chart)
-if "hour" not in batch_data.columns and "timestamp" in batch_data.columns:
+if "timestamp" in batch_data.columns:
     batch_data["timestamp"] = pd.to_datetime(batch_data["timestamp"], errors="coerce")
+if "hour" not in batch_data.columns and "timestamp" in batch_data.columns:
     batch_data["hour"] = batch_data["timestamp"].dt.hour
 
-# ── 2. LOAD MODELS ────────────────────────────────────────────────────────────
-model_search_dirs = [
-    project_root / "models",
-    current_file.parent / "models",
-    Path("models"),
-]
+numeric_cols = ["aqi", "pm25", "pm10", "temperature", "humidity", "wind_speed"]
+for col in numeric_cols:
+    if col in batch_data.columns:
+        batch_data[col] = pd.to_numeric(batch_data[col], errors="coerce")
 
-models_dir   = None
-models_rf    = {}
-scaler       = None
-models_ready = False
+# ── 2. LOAD MODELS ─────────────────────────────────────────────────────────────
+@st.cache_resource(show_spinner="Loading ML models...")
+def load_models():
+    model_search_dirs = [
+        project_root / "models",
+        current_file.parent / "models",
+        Path("models"),
+    ]
+    
+    models_dir = None
+    for d in model_search_dirs:
+        if d.exists():
+            models_dir = d
+            break
+    
+    if models_dir:
+        try:
+            scaler = joblib.load(models_dir / "scaler.pkl")
+            models_rf = {
+                "aqi_next_24h": joblib.load(models_dir / "model_rf_24h.pkl"),
+                "aqi_next_48h": joblib.load(models_dir / "model_rf_48h.pkl"),
+                "aqi_next_72h": joblib.load(models_dir / "model_rf_72h.pkl"),
+            }
+            return True, models_rf, scaler, models_dir
+        except Exception as e:
+            st.sidebar.warning(f"⚠️ Model load issue: {e}")
+            return False, None, None, None
+    return False, None, None, None
 
-for d in model_search_dirs:
-    if d.exists():
-        models_dir = d
-        break
+models_ready, models_rf, scaler, models_dir = load_models()
 
-if models_dir:
-    try:
-        scaler = joblib.load(models_dir / "scaler.pkl")
-        models_rf = {
-            "aqi_next_24h": joblib.load(models_dir / "model_rf_24h.pkl"),
-            "aqi_next_48h": joblib.load(models_dir / "model_rf_48h.pkl"),
-            "aqi_next_72h": joblib.load(models_dir / "model_rf_72h.pkl"),
-        }
-        models_ready = True
-        st.sidebar.success("🚀 ML Forecast Model: Active (Random Forest)")
-    except Exception as e:
-        st.sidebar.warning(f"⚠️ Model load issue: {e}")
+if models_ready:
+    st.sidebar.success("🚀 **ML Model:** Random Forest (Active)")
 
-# ── 3. HAZARD ALERT (sidebar) ─────────────────────────────────────────────────
+# ── 3. CURRENT AQI & HAZARD ASSESSMENT ─────────────────────────────────────────
 latest_aqi = float(batch_data["aqi"].iloc[-1]) if "aqi" in batch_data.columns else 120.0
 
-st.sidebar.markdown(f"### 📍 Current AQI: `{int(latest_aqi)}`")
-if latest_aqi > 150:
-    st.sidebar.error("🚨 **HAZARD ALERT:** Air Quality is Unhealthy! Avoid outdoor activities.")
-elif latest_aqi > 100:
-    st.sidebar.warning("⚠️ **MODERATE ALERT:** Unhealthy for Sensitive Groups.")
-else:
-    st.sidebar.success("✅ **GOOD:** Air Quality is acceptable and safe.")
+def get_hazard_level(aqi):
+    if aqi <= 50:
+        return "Good", "🟢", "hazard-good", "Air quality is satisfactory, little to no risk."
+    elif aqi <= 100:
+        return "Moderate", "🟡", "hazard-moderate", "Acceptable air quality."
+    elif aqi <= 150:
+        return "Unhealthy for Sensitive Groups", "🟠", "hazard-unhealthy", "Sensitive groups should limit outdoor exertion."
+    elif aqi <= 200:
+        return "Unhealthy", "🔴", "hazard-unhealthy", "Everyone may experience health effects."
+    elif aqi <= 300:
+        return "Very Unhealthy", "🟣", "hazard-hazardous", "Health alert: serious health effects possible."
+    else:
+        return "Hazardous", "⚫", "hazard-hazardous", "Emergency conditions. Avoid all outdoor activity."
 
-# ── 4. EMAIL ALERT — Issue 3 Fix ──────────────────────────────────────────────
-def send_email_alert(aqi_value, p24, p48, p72):
-    try:
-        import yagmail
-        sender   = os.getenv("ALERT_EMAIL_SENDER")
-        password = os.getenv("ALERT_EMAIL_PASSWORD")
-        receiver = os.getenv("ALERT_EMAIL_RECEIVER")
-        if not all([sender, password, receiver]):
-            return
-        yag = yagmail.SMTP(sender, password)
-        yag.send(
-            to=receiver,
-            subject=f"🚨 AQI HAZARD ALERT — Karachi AQI: {aqi_value}",
-            contents=(
-                f"⚠️ Air Quality Alert — Karachi\n\n"
-                f"Current AQI : {aqi_value}\n"
-                f"Status      : UNHEALTHY — Avoid outdoor activities\n\n"
-                f"Predictions:\n"
-                f"  → 24h : {p24:.1f}\n"
-                f"  → 48h : {p48:.1f}\n"
-                f"  → 72h : {p72:.1f}\n\n"
-                f"Stay safe!\n— AQI Predictor System"
-            )
-        )
-        st.sidebar.success("📧 Hazard alert email sent!")
-    except ImportError:
-        st.sidebar.info("📧 Install yagmail for email alerts.")
-    except Exception as e:
-        st.sidebar.warning(f"Email alert skipped: {e}")
+hazard_level, hazard_icon, hazard_class, hazard_advice = get_hazard_level(latest_aqi)
 
-# ── 5. REAL MODEL PREDICTIONS ─────────────────────────────────────────────────
-def build_feature_row(df):
-    df_feat = df.copy()
-    for col in FEATURE_COLUMNS:
-        if col not in df_feat.columns:
-            df_feat[col] = 0.0
-        df_feat[col] = pd.to_numeric(df_feat[col], errors="coerce")
-    valid_rows = df_feat.dropna(subset=["aqi_lag_1h"])
-    if valid_rows.empty:
-        valid_rows = df_feat
-    last_row = valid_rows.iloc[[-1]][FEATURE_COLUMNS].fillna(0.0)
-    return last_row.values
-
-if models_ready:
-    try:
-        X_raw    = build_feature_row(batch_data)
-        X_scaled = scaler.transform(X_raw)
-        pred_24h = float(models_rf["aqi_next_24h"].predict(X_scaled)[0])
-        pred_48h = float(models_rf["aqi_next_48h"].predict(X_scaled)[0])
-        pred_72h = float(models_rf["aqi_next_72h"].predict(X_scaled)[0])
-        st.sidebar.markdown(
-            f"**Predictions**  \n"
-            f"24h → `{pred_24h:.1f}`  \n"
-            f"48h → `{pred_48h:.1f}`  \n"
-            f"72h → `{pred_72h:.1f}`"
-        )
-    except Exception as e:
-        st.sidebar.error(f"Prediction error: {e}")
+# ── 4. SIDEBAR ─────────────────────────────────────────────────────────────────
+with st.sidebar:
+    st.markdown("## 🌍 Karachi Air Quality")
+    st.markdown(f"### {hazard_icon} Current AQI: **{int(latest_aqi)}**")
+    st.markdown(f"##### Status: *{hazard_level}*")
+    st.markdown(f"<div class='{hazard_class}'>{hazard_advice}</div>", unsafe_allow_html=True)
+    
+    st.markdown("---")
+    
+    if models_ready:
+        try:
+            df_feat = batch_data.copy()
+            for col in FEATURE_COLUMNS:
+                if col not in df_feat.columns:
+                    df_feat[col] = 0.0
+                df_feat[col] = pd.to_numeric(df_feat[col], errors="coerce")
+            
+            valid_rows = df_feat.dropna(subset=["aqi_lag_1h"])
+            if valid_rows.empty:
+                valid_rows = df_feat
+            last_row = valid_rows.iloc[[-1]][FEATURE_COLUMNS].fillna(0.0)
+            X_scaled = scaler.transform(last_row.values)
+            
+            pred_24h = float(models_rf["aqi_next_24h"].predict(X_scaled)[0])
+            pred_48h = float(models_rf["aqi_next_48h"].predict(X_scaled)[0])
+            pred_72h = float(models_rf["aqi_next_72h"].predict(X_scaled)[0])
+        except Exception as e:
+            pred_24h = latest_aqi + 15
+            pred_48h = latest_aqi + 10
+            pred_72h = latest_aqi + 5
+    else:
         pred_24h = latest_aqi + 15
-        pred_48h = latest_aqi + 5
-        pred_72h = latest_aqi + 22
-else:
-    pred_24h = latest_aqi + 15
-    pred_48h = latest_aqi + 5
-    pred_72h = latest_aqi + 22
+        pred_48h = latest_aqi + 10
+        pred_72h = latest_aqi + 5
+    
+    st.markdown("### 📈 3-Day Forecast")
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("24h", f"{pred_24h:.0f}", delta=f"{pred_24h - latest_aqi:.0f}")
+    with col2:
+        st.metric("48h", f"{pred_48h:.0f}", delta=f"{pred_48h - latest_aqi:.0f}")
+    with col3:
+        st.metric("72h", f"{pred_72h:.0f}", delta=f"{pred_72h - latest_aqi:.0f}")
+    
+    st.markdown("---")
+    st.markdown(f"🕐 Last Update: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
-# Trigger email if AQI is hazardous
-if latest_aqi > 150:
-    send_email_alert(int(latest_aqi), pred_24h, pred_48h, pred_72h)
+# ── 5. MAIN TITLE ──────────────────────────────────────────────────────────────
+st.markdown("""
+<div class='main-title'>
+    <h1 style='color: white; margin: 0;'>🌫️ Karachi Real-Time AQI Air Quality Predictive System</h1>
+    <p style='color: #ccc; margin: 0.5rem 0 0 0;'>End-to-End Serverless MLOps Pipeline with Automated Model Inference</p>
+</div>
+""", unsafe_allow_html=True)
 
+# ── 6. KEY METRICS ─────────────────────────────────────────────────────────────
+col_metrics = st.columns(5)
+with col_metrics[0]:
+    st.metric("🌡️ Temperature", f"{batch_data['temperature'].iloc[-1]:.1f}°C" if 'temperature' in batch_data.columns else "N/A")
+with col_metrics[1]:
+    st.metric("💧 Humidity", f"{batch_data['humidity'].iloc[-1]:.0f}%" if 'humidity' in batch_data.columns else "N/A")
+with col_metrics[2]:
+    st.metric("💨 PM2.5", f"{batch_data['pm25'].iloc[-1]:.0f}" if 'pm25' in batch_data.columns else "N/A")
+with col_metrics[3]:
+    st.metric("🌪️ PM10", f"{batch_data['pm10'].iloc[-1]:.0f}" if 'pm10' in batch_data.columns else "N/A")
+with col_metrics[4]:
+    st.metric("📊 Data Points", f"{len(batch_data)}")
+
+st.markdown("---")
+
+# ── 7. FORECAST CHART ──────────────────────────────────────────────────────────
 forecast_df = pd.DataFrame({
-    "Timeline":      ["Now", "Next 24 Hours", "Next 48 Hours", "Next 72 Hours"],
-    "Predicted AQI": [round(latest_aqi, 1), round(pred_24h, 1),
-                      round(pred_48h, 1),   round(pred_72h, 1)],
+    "Timeline": ["Now", "24 Hours", "48 Hours", "72 Hours"],
+    "AQI": [round(latest_aqi, 1), round(pred_24h, 1), round(pred_48h, 1), round(pred_72h, 1)],
 })
 
-# ── 6. SHAP — GUARANTEED FALLBACK — Issue 4 Fix ───────────────────────────────
-@st.cache_data(show_spinner=False)
-def compute_shap_importance(_models_rf, _scaler, _df):
-    df_feat = _df.copy()
-    for col in FEATURE_COLUMNS:
-        if col not in df_feat.columns:
-            df_feat[col] = 0.0
-        df_feat[col] = pd.to_numeric(df_feat[col], errors="coerce")
-    valid = df_feat.dropna(subset=["aqi_lag_1h"])
-    if valid.empty:
-        valid = df_feat
-    sample = valid.tail(50)[FEATURE_COLUMNS].fillna(0.0)
-    X_s = _scaler.transform(sample.values)
-
-    try:
-        import shap
-        explainer   = shap.TreeExplainer(_models_rf["aqi_next_24h"])
-        shap_values = explainer.shap_values(X_s)
-        mean_abs    = np.abs(shap_values).mean(axis=0)
-        label = "Real SHAP Values (TreeExplainer)"
-    except Exception:
-        # Always works — no shap package needed
-        mean_abs = _models_rf["aqi_next_24h"].feature_importances_
-        label    = "RF Feature Importance (SHAP fallback)"
-
-    importance = pd.DataFrame({
-        "Feature":             FEATURE_COLUMNS,
-        "SHAP Value (Impact)": mean_abs,
-    }).sort_values("SHAP Value (Impact)", ascending=False).head(8)
-    return importance, label
-
-shap_df    = None
-shap_label = ""
-if models_ready:
-    shap_df, shap_label = compute_shap_importance(models_rf, scaler, batch_data)
-
-# ── 7. FORECAST + SHAP CHARTS ─────────────────────────────────────────────────
 col_left, col_right = st.columns([2, 1])
 
 with col_left:
-    st.subheader("📈 3-Day Ahead AQI Forecast")
-    fig_forecast = px.line(
-        forecast_df, x="Timeline", y="Predicted AQI", text="Predicted AQI",
-        title="Predictive AQI Trendline — Random Forest Model Inference",
-        markers=True, color_discrete_sequence=["#7A1FA2"],
+    st.subheader("📈 3-Day AQI Forecast")
+    
+    fig_forecast = go.Figure()
+    fig_forecast.add_hrect(y0=0, y1=50, fillcolor="green", opacity=0.1, line_width=0)
+    fig_forecast.add_hrect(y0=50, y1=100, fillcolor="yellow", opacity=0.1, line_width=0)
+    fig_forecast.add_hrect(y0=100, y1=150, fillcolor="orange", opacity=0.1, line_width=0)
+    fig_forecast.add_hrect(y0=150, y1=200, fillcolor="red", opacity=0.1, line_width=0)
+    fig_forecast.add_hrect(y0=200, y1=300, fillcolor="purple", opacity=0.1, line_width=0)
+    
+    fig_forecast.add_trace(go.Scatter(
+        x=forecast_df["Timeline"],
+        y=forecast_df["AQI"],
+        mode="lines+markers+text",
+        name="AQI Forecast",
+        line=dict(color="#7A1FA2", width=4),
+        marker=dict(size=12, color="#7A1FA2", symbol="circle"),
+        text=forecast_df["AQI"],
+        textposition="top center",
+        textfont=dict(size=14),
+    ))
+    
+    fig_forecast.update_layout(
+        title="Predictive AQI Trendline — Random Forest Model",
+        xaxis_title="Timeline",
+        yaxis_title="Air Quality Index (AQI)",
+        height=450,
+        hovermode="x unified",
+        plot_bgcolor="rgba(0,0,0,0)",
+        yaxis=dict(gridcolor="#e0e0e0"),
     )
-    fig_forecast.update_traces(textposition="top center", line=dict(width=4))
     st.plotly_chart(fig_forecast, use_container_width=True)
 
 with col_right:
-    st.subheader("🧬 SHAP Feature Importance")
-    if shap_df is not None:
-        plot_df = shap_df.sort_values("SHAP Value (Impact)", ascending=True)
-        fig_shap = px.bar(
-            plot_df, x="SHAP Value (Impact)", y="Feature", orientation="h",
-            title=shap_label, color_discrete_sequence=["#009688"],
-        )
-        st.plotly_chart(fig_shap, use_container_width=True)
+    st.subheader("🧬 Top Feature Importance")
+    
+    if models_ready:
+        try:
+            df_feat = batch_data.copy()
+            for col in FEATURE_COLUMNS:
+                if col not in df_feat.columns:
+                    df_feat[col] = 0.0
+                df_feat[col] = pd.to_numeric(df_feat[col], errors="coerce")
+            
+            valid = df_feat.dropna(subset=["aqi_lag_1h"])
+            if valid.empty:
+                valid = df_feat
+            sample = valid.tail(50)[FEATURE_COLUMNS].fillna(0.0)
+            X_s = scaler.transform(sample.values)
+            
+            try:
+                import shap
+                explainer = shap.TreeExplainer(models_rf["aqi_next_24h"])
+                shap_values = explainer.shap_values(X_s)
+                mean_abs = np.abs(shap_values).mean(axis=0)
+                title = "SHAP Feature Importance"
+            except:
+                mean_abs = models_rf["aqi_next_24h"].feature_importances_
+                title = "Random Forest Feature Importance"
+            
+            importance_df = pd.DataFrame({
+                "Feature": FEATURE_COLUMNS,
+                "Importance": mean_abs,
+            }).sort_values("Importance", ascending=True).tail(8)
+            
+            fig_shap = px.bar(
+                importance_df,
+                x="Importance", y="Feature",
+                orientation="h",
+                title=title,
+                color="Importance",
+                color_continuous_scale="Tealgrn",
+                text_auto=".3f",
+            )
+            fig_shap.update_layout(height=400)
+            st.plotly_chart(fig_shap, use_container_width=True)
+        except Exception as e:
+            st.info("Feature importance will appear here")
     else:
-        fallback = pd.DataFrame({
-            "Feature":             ["PM2.5 Lag", "Temperature", "Humidity",
-                                    "Wind Speed", "Hour of Day"],
-            "SHAP Value (Impact)": [0.48, 0.22, 0.14, 0.09, 0.07],
-        }).sort_values("SHAP Value (Impact)", ascending=True)
-        fig_shap = px.bar(
-            fallback, x="SHAP Value (Impact)", y="Feature", orientation="h",
-            title="Feature Importance (Indicative)", color_discrete_sequence=["#009688"],
-        )
-        st.plotly_chart(fig_shap, use_container_width=True)
+        st.info("📊 Train models to see feature importance")
 
-# ── 8. MODEL METRICS ──────────────────────────────────────────────────────────
 st.markdown("---")
-st.subheader("📉 Model Evaluation Metrics (Random Forest)")
+
+# ── 8. MODEL METRICS ───────────────────────────────────────────────────────────
+st.subheader("📊 Model Performance Metrics")
 
 model_info_path = models_dir / "model_info.json" if models_dir else None
-rf_metrics = None
 if model_info_path and model_info_path.exists():
     try:
         with open(model_info_path) as f:
             info = json.load(f)
         rf_metrics = info.get("rf_metrics", {})
+        
+        if rf_metrics:
+            metrics_data = []
+            for horizon, label in [("24h", "24 Hours"), ("48h", "48 Hours"), ("72h", "72 Hours")]:
+                m = rf_metrics.get(f"aqi_next_{horizon}", {})
+                metrics_data.append({
+                    "Horizon": label,
+                    "RMSE": m.get("rmse", "-"),
+                    "MAE": m.get("mae", "-"),
+                    "R² Score": m.get("r2", "-"),
+                })
+            
+            metrics_df = pd.DataFrame(metrics_data)
+            st.dataframe(metrics_df, use_container_width=True, hide_index=True)
     except Exception:
-        pass
+        st.info("Metrics will appear after training")
 
-if rf_metrics:
-    metrics_df = pd.DataFrame({
-        "Horizon": ["24h", "48h", "72h"],
-        "RMSE": [rf_metrics.get("aqi_next_24h", {}).get("rmse", "-"),
-                 rf_metrics.get("aqi_next_48h", {}).get("rmse", "-"),
-                 rf_metrics.get("aqi_next_72h", {}).get("rmse", "-")],
-        "MAE":  [rf_metrics.get("aqi_next_24h", {}).get("mae", "-"),
-                 rf_metrics.get("aqi_next_48h", {}).get("mae", "-"),
-                 rf_metrics.get("aqi_next_72h", {}).get("mae", "-")],
-        "R²":   [rf_metrics.get("aqi_next_24h", {}).get("r2", "-"),
-                 rf_metrics.get("aqi_next_48h", {}).get("r2", "-"),
-                 rf_metrics.get("aqi_next_72h", {}).get("r2", "-")],
-    })
-    st.dataframe(metrics_df, use_container_width=True)
-
-# ── 9. EDA SECTION — Issue 1 & 2 Fix ─────────────────────────────────────────
+# ── 9. EDA SECTION ─────────────────────────────────────────────────────────────
 st.markdown("---")
 st.subheader("📊 Exploratory Data Analysis")
 
-# Issue 2 — Historical AQI Trend (last 30 days)
-if "timestamp" in batch_data.columns and "aqi" in batch_data.columns:
-    batch_data["timestamp"] = pd.to_datetime(batch_data["timestamp"], errors="coerce")
-    trend_data = batch_data.dropna(subset=["timestamp", "aqi"]).tail(720)
-    fig_trend = px.line(
-        trend_data, x="timestamp", y="aqi",
-        title="📅 Historical AQI Trend — Last 30 Days",
-        color_discrete_sequence=["#1565C0"],
-        labels={"aqi": "AQI", "timestamp": "Date / Time"},
-    )
-    fig_trend.update_traces(line=dict(width=2))
-    fig_trend.add_hline(y=150, line_dash="dash", line_color="red",
-                        annotation_text="Hazard (150)")
-    fig_trend.add_hline(y=100, line_dash="dot", line_color="orange",
-                        annotation_text="Moderate (100)")
-    st.plotly_chart(fig_trend, use_container_width=True)
+tab1, tab2, tab3 = st.tabs(["📈 Time Series", "📊 Distributions", "🔥 Correlations"])
 
-# Issue 1 — AQI Distribution + Hourly pattern
-eda_col1, eda_col2 = st.columns(2)
-
-with eda_col1:
-    if "aqi" in batch_data.columns:
-        fig_dist = px.histogram(
-            batch_data, x="aqi", nbins=30,
-            title="AQI Distribution",
-            color_discrete_sequence=["#E65100"],
-            labels={"aqi": "AQI Value"},
+with tab1:
+    if "timestamp" in batch_data.columns and "aqi" in batch_data.columns:
+        trend_data = batch_data.dropna(subset=["timestamp", "aqi"]).tail(720)
+        fig_trend = go.Figure()
+        
+        fig_trend.add_trace(go.Scatter(
+            x=trend_data["timestamp"],
+            y=trend_data["aqi"],
+            mode="lines",
+            name="AQI",
+            line=dict(color="#1565C0", width=2),
+            fill="tozeroy",
+            fillcolor="rgba(21, 101, 192, 0.1)",
+        ))
+        
+        fig_trend.add_hline(y=150, line_dash="dash", line_color="red", 
+                            annotation_text="Hazardous (150)")
+        fig_trend.add_hline(y=100, line_dash="dot", line_color="orange",
+                            annotation_text="Moderate (100)")
+        
+        fig_trend.update_layout(
+            title="Historical AQI Trend",
+            xaxis_title="Date/Time",
+            yaxis_title="AQI",
+            height=450,
         )
-        fig_dist.add_vline(x=100, line_dash="dot",  line_color="orange")
-        fig_dist.add_vline(x=150, line_dash="dash", line_color="red")
-        st.plotly_chart(fig_dist, use_container_width=True)
+        st.plotly_chart(fig_trend, use_container_width=True)
 
-with eda_col2:
-    if "hour" in batch_data.columns and "aqi" in batch_data.columns:
-        hourly = batch_data.groupby("hour")["aqi"].mean().reset_index()
-        fig_hourly = px.bar(
-            hourly, x="hour", y="aqi",
-            title="Average AQI by Hour of Day",
-            color_discrete_sequence=["#2E7D32"],
-            labels={"aqi": "Avg AQI", "hour": "Hour"},
+with tab2:
+    col_dist1, col_dist2 = st.columns(2)
+    
+    with col_dist1:
+        if "aqi" in batch_data.columns:
+            fig_hist = px.histogram(
+                batch_data, x="aqi", nbins=30,
+                title="AQI Distribution",
+                color_discrete_sequence=["#E65100"],
+                marginal="box",
+            )
+            fig_hist.add_vline(x=100, line_dash="dot", line_color="orange")
+            fig_hist.add_vline(x=150, line_dash="dash", line_color="red")
+            st.plotly_chart(fig_hist, use_container_width=True)
+    
+    with col_dist2:
+        if "hour" in batch_data.columns and "aqi" in batch_data.columns:
+            hourly_avg = batch_data.groupby("hour")["aqi"].agg(["mean", "std"]).reset_index()
+            fig_hourly = px.bar(
+                hourly_avg, x="hour", y="mean",
+                error_y="std",
+                title="Average AQI by Hour",
+                color_discrete_sequence=["#2E7D32"],
+                labels={"mean": "Avg AQI", "hour": "Hour"},
+            )
+            st.plotly_chart(fig_hourly, use_container_width=True)
+
+with tab3:
+    corr_cols = ["aqi", "pm25", "pm10", "temperature", "humidity", "wind_speed"]
+    corr_cols = [c for c in corr_cols if c in batch_data.columns]
+    if len(corr_cols) > 2:
+        corr_matrix = batch_data[corr_cols].apply(pd.to_numeric, errors="coerce").corr().round(2)
+        
+        fig_corr = px.imshow(
+            corr_matrix,
+            title="Feature Correlation Heatmap",
+            color_continuous_scale="RdBu_r",
+            text_auto=True,
+            aspect="auto",
+            zmin=-1, zmax=1,
         )
-        st.plotly_chart(fig_hourly, use_container_width=True)
+        fig_corr.update_layout(height=450)
+        st.plotly_chart(fig_corr, use_container_width=True)
 
-# Correlation Heatmap
-corr_cols = ["aqi", "pm25", "pm10", "temperature", "humidity", "wind_speed"]
-corr_cols = [c for c in corr_cols if c in batch_data.columns]
-if len(corr_cols) > 2:
-    corr_matrix = batch_data[corr_cols].apply(pd.to_numeric, errors="coerce").corr().round(2)
-    fig_corr = px.imshow(
-        corr_matrix,
-        title="Feature Correlation Heatmap",
-        color_continuous_scale="RdBu_r",
-        text_auto=True,
-        zmin=-1, zmax=1,
-    )
-    st.plotly_chart(fig_corr, use_container_width=True)
-
-# ── 10. HISTORICAL DATA TABLE ─────────────────────────────────────────────────
+# ── 10. RECENT DATA TABLE ──────────────────────────────────────────────────────
 st.markdown("---")
-st.subheader("📋 Historical Feature Streams Data View (Karachi)")
-display_cols = [c for c in ["timestamp", "aqi", "pm25", "pm10",
-                             "temperature", "humidity", "wind_speed"]
-                if c in batch_data.columns]
-st.dataframe(batch_data[display_cols].tail(10), use_container_width=True)
+st.subheader("📋 Recent Air Quality Readings")
+
+display_cols = ["timestamp", "aqi", "pm25", "pm10", "temperature", "humidity", "wind_speed"]
+display_cols = [c for c in display_cols if c in batch_data.columns]
+
+if display_cols:
+    recent_data = batch_data[display_cols].tail(10).copy()
+    if "timestamp" in recent_data.columns:
+        recent_data["timestamp"] = recent_data["timestamp"].dt.strftime("%Y-%m-%d %H:%M")
+    st.dataframe(recent_data, use_container_width=True, hide_index=True)
+
+# ── 11. FOOTER ─────────────────────────────────────────────────────────────────
+st.markdown("---")
+st.markdown(
+    """
+    <div style='text-align: center; color: #666; padding: 1rem;'>
+        <p>🔬 <strong>Karachi AQI Predictive System</strong> | End-to-End Serverless MLOps Pipeline</p>
+        <p>🤖 Random Forest Model | 📡 Real-Time API Integration | 🧬 SHAP Explainability</p>
+        <p style='font-size: 0.8rem;'>© 2026 10Pearls Internship Cohort 8 | IBA Sukkur University</p>
+    </div>
+    """, 
+    unsafe_allow_html=True
+)
+
+# ── 12. REFRESH BUTTON ─────────────────────────────────────────────────────────
+st.sidebar.markdown("---")
+if st.sidebar.button("🔄 Refresh Dashboard"):
+    st.cache_data.clear()
+    st.cache_resource.clear()
+    st.rerun()
