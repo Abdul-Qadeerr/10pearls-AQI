@@ -1,4 +1,3 @@
-```markdown
 # 🌫️ AQI Predictor — Serverless MLOps Pipeline for Air Quality Forecasting
 
 [![Live Dashboard](https://img.shields.io/badge/🚀_Live_Dashboard-Streamlit-FF4B4B?style=for-the-badge)](https://karachi-aqi-monitor.streamlit.app/)
