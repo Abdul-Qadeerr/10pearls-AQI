@@ -6,57 +6,55 @@
 [![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-2088FF?style=flat&logo=github-actions&logoColor=white)](https://github.com/features/actions)
 [![Hopsworks](https://img.shields.io/badge/Hopsworks-FF6B00?style=flat&logo=apache&logoColor=white)](https://www.hopsworks.ai/)
 
-> **🏆 10Pearls Internship Program | Cohort 8 | Abdul Qadeer | Sukkur IBA University**
+> **10Pearls Internship Program | Cohort 8 | Abdul Qadeer | Sukkur IBA University**
 
-An **end-to-end serverless Machine Learning pipeline** that predicts the Air Quality Index (AQI) for **Karachi, Sindh, Pakistan** for the next 3 days.
+An end-to-end serverless Machine Learning pipeline that predicts the Air Quality Index (AQI) for **Karachi, Sindh, Pakistan** for the next 3 days.
 
 ---
 
-## 🔗 Quick Links
+## Quick Links
 
 | Link | URL |
 |------|-----|
-| 🚀 **Live Dashboard** | [karachi-aqi-monitor.streamlit.app](https://karachi-aqi-monitor.streamlit.app/) |
-| 📂 **GitHub Repository** | [github.com/Abdul-Qadeerr/10pearls-AQI](https://github.com/Abdul-Qadeerr/10pearls-AQI) |
-| 📊 **Hopsworks Feature Store** | `aqi_predictor_10shine` |
+| Live Dashboard | [karachi-aqi-monitor.streamlit.app](https://karachi-aqi-monitor.streamlit.app/) |
+| GitHub Repository | [github.com/Abdul-Qadeerr/10pearls-AQI](https://github.com/Abdul-Qadeerr/10pearls-AQI) |
+| Hopsworks Feature Store | `aqi_predictor_10shine` |
 
 ---
 
-## 📸 Dashboard Preview
+## Dashboard Preview
 
 | Full Dashboard | 3-Day Forecast | SHAP Importance |
 |----------------|----------------|-----------------|
 | ![Dashboard](images/dashboard_full.png) | ![Forecast](images/forecast_chart.png) | ![SHAP](images/shap_importance.png) |
 
-*Real-time AQI monitoring dashboard with 3-day forecast and SHAP explainability*
-
 ---
 
-## 📊 Exploratory Data Analysis
+## Exploratory Data Analysis
 
 ![EDA Time Series](images/eda_timeseries.png)
 
-*Historical AQI trend with hazard thresholds (Moderate: 100, Hazardous: 150)*
+*Historical AQI trend with hazard thresholds — Moderate: 100, Hazardous: 150*
 
 ---
 
-## 🚀 Features
+## Features
 
 | Feature | Description |
 |---------|-------------|
-| 🤖 **Automated Data Pipeline** | Hourly data fetching from AQICN + OpenWeather APIs |
-| 💾 **Serverless Feature Store** | Production-grade feature management via Hopsworks |
-| 🧠 **Multi-Model Evaluation** | Random Forest + LSTM with automatic best-model selection |
-| ⚙️ **CI/CD Automation** | GitHub Actions — hourly feature update + daily retraining |
-| 📊 **Interactive Dashboard** | Streamlit UI with real-time AQI, EDA charts, and hazard alerts |
-| 🔬 **Model Explainability** | SHAP TreeExplainer plots for feature importance |
-| 📧 **Email Alerts** | Automatic email notifications for hazardous AQI levels |
-| 📈 **EDA Section** | Historical trend, distribution, hourly pattern, correlation heatmap |
-| 💾 **Fallback Cache** | Local CSV backup when APIs are unavailable |
+| Automated Data Pipeline | Hourly data fetching from AQICN + OpenWeather APIs |
+| Serverless Feature Store | Production-grade feature management via Hopsworks |
+| Multi-Model Evaluation | Random Forest + LSTM with automatic best-model selection |
+| CI/CD Automation | GitHub Actions — hourly feature update + daily retraining |
+| Interactive Dashboard | Streamlit UI with real-time AQI, EDA charts, and hazard alerts |
+| Model Explainability | SHAP TreeExplainer plots for feature importance |
+| Email Alerts | Automatic email notifications for hazardous AQI levels |
+| EDA Section | Historical trend, distribution, hourly pattern, correlation heatmap |
+| Fallback Cache | Local CSV backup when APIs are unavailable |
 
 ---
 
-## 🛠️ System Architecture
+## System Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -93,17 +91,17 @@ An **end-to-end serverless Machine Learning pipeline** that predicts the Air Qua
 
 ### Data Flow
 
-1. **Hourly Trigger** → GitHub Actions cron job activates
-2. **Data Ingestion** → AQICN + OpenWeather APIs fetch raw data
-3. **Feature Engineering** → 27 features generated (cyclical encoding, lag features)
-4. **Feature Store** → Data uploaded to Hopsworks (fallback: local CSV)
-5. **Daily Training** → Random Forest + LSTM models trained and evaluated
-6. **Model Registry** → Best model saved to `models/` folder
-7. **Dashboard** → Streamlit loads model and shows predictions + EDA
+1. Hourly Trigger → GitHub Actions cron job activates
+2. Data Ingestion → AQICN + OpenWeather APIs fetch raw data
+3. Feature Engineering → 27 features generated (cyclical encoding, lag features)
+4. Feature Store → Data uploaded to Hopsworks (fallback: local CSV)
+5. Daily Training → Random Forest + LSTM models trained and evaluated
+6. Model Registry → Best model saved to `models/` folder
+7. Dashboard → Streamlit loads model and shows predictions + EDA
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```
 aqi-predictor/
@@ -124,7 +122,7 @@ aqi-predictor/
 │   ├── model_rf_48h.pkl          # Random Forest — 48h forecast
 │   ├── model_rf_72h.pkl          # Random Forest — 72h forecast
 │   ├── scaler.pkl                # Feature scaler
-│   └── model_info.json           # Model metrics (RMSE, MAE, R²)
+│   └── model_info.json           # Model metrics (RMSE, MAE, R2)
 ├── data/
 │   └── karachi_aqi_data.csv      # 90-day historical cache
 ├── requirements.txt
@@ -133,23 +131,23 @@ aqi-predictor/
 
 ---
 
-## 📊 Tech Stack
+## Tech Stack
 
 | Component | Technology |
 |-----------|------------|
-| **Data APIs** | AQICN API, OpenWeatherMap API |
-| **Feature Store** | Hopsworks (Free Tier) |
-| **ML Frameworks** | Scikit-Learn, TensorFlow-CPU |
-| **Orchestration** | GitHub Actions (ubuntu-latest) |
-| **Frontend** | Streamlit + Plotly |
-| **Explainability** | SHAP (TreeExplainer) |
-| **Email Alerts** | yagmail |
+| Data APIs | AQICN API, OpenWeatherMap API |
+| Feature Store | Hopsworks (Free Tier) |
+| ML Frameworks | Scikit-Learn, TensorFlow-CPU |
+| Orchestration | GitHub Actions (ubuntu-latest) |
+| Frontend | Streamlit + Plotly |
+| Explainability | SHAP (TreeExplainer) |
+| Email Alerts | yagmail |
 
 ---
 
-## 📊 Model Performance
+## Model Performance
 
-| Model | Horizon | RMSE | MAE | R² |
+| Model | Horizon | RMSE | MAE | R2 |
 |-------|---------|------|-----|----|
 | Random Forest | 24h | 18.62 | 14.1 | 0.31 |
 | Random Forest | 48h | 23.63 | 18.2 | -0.10 |
@@ -160,12 +158,11 @@ aqi-predictor/
 
 **Selected Model:** Random Forest (Avg RMSE: 22.45 vs LSTM: 73.48)
 
-> **Note on R²:** Negative R² for 48h and 72h horizons is expected with synthetic backfill data.
-> With real historical API data, these metrics will improve significantly.
+Note: Negative R2 for 48h and 72h horizons is expected with synthetic backfill data. With real historical API data, these metrics will improve.
 
 ---
 
-## 🛠️ Setup Instructions
+## Setup Instructions
 
 ### Prerequisites
 
@@ -178,7 +175,7 @@ aqi-predictor/
 
 Create a `.env` file in the project root:
 
-```env
+```
 AQICN_TOKEN=your_aqicn_token
 OPENWEATHER_API_KEY=your_openweather_key
 HOPSWORKS_API_KEY=your_hopsworks_key
@@ -189,46 +186,35 @@ CITY_LON=67.0011
 
 ### Run Commands
 
-```bash
-# Install dependencies
+```
 pip install -r requirements.txt
 
-# Run backfill (one time — generates 90 days historical data)
 python -m feature_pipeline.backfill_pipeline
 
-# Train models
 python -m training_pipeline.train
 
-# Launch dashboard locally
 streamlit run dashboard/app.py
 
-# Run feature pipeline manually
 python -m feature_pipeline.upload_to_hopsworks
 ```
 
 ---
 
-## 🔮 Replication for Other Cities
+## Replication for Other Cities
 
-To adapt for other cities (Hyderabad, Sukkur, Lahore):
+To adapt for other cities such as Hyderabad, Sukkur, or Lahore, update coordinates in the `.env` file:
 
-1. Update coordinates in `.env` file:
-
-```env
+```
 CITY_NAME=Lahore
 CITY_LAT=31.5204
 CITY_LON=74.3587
 ```
 
-2. Run backfill pipeline for new location
-3. Retrain models
-4. Dashboard auto-updates with new data
-
-The pipeline is fully parameterized — just change `CITY_NAME`, `CITY_LAT`, and `CITY_LON`.
+Then run the backfill pipeline and retrain models. The dashboard auto-updates with new data. The pipeline is fully parameterized — just change `CITY_NAME`, `CITY_LAT`, and `CITY_LON`.
 
 ---
 
-## 👤 Author
+## Author
 
 **Abdul Qadeer**
 
@@ -238,7 +224,6 @@ The pipeline is fully parameterized — just change `CITY_NAME`, `CITY_LAT`, and
 
 ---
 
-## 📄 License
+## License
 
-This project is part of the **10Pearls Shine Internship Program (Cohort 8)**.
-```
+This project is part of the 10Pearls Shine Internship Program (Cohort 8).
