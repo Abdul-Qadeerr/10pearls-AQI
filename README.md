@@ -1,15 +1,80 @@
-# 🌫️ AQI Predictor - Serverless MLOps Pipeline for Air Quality Forecasting
+## ✅ README Bohot Achha Hai! Bas Thora Sa Improve Karte Hain
 
+Aapka README **already bohot professional hai**. Neeche **minor improvements** bat raha hun jo GitHub par aur bhi acha lagega:
+
+---
+
+## 🔧 Needed Fixes
+
+### 1. Missing Closing Backticks in `.env` Block
+
+**Current (Error):**
+```markdown
+CITY_LON=67.0011
+
+
+### Run Commands
+```
+
+**Fix:** Add closing backticks:
+
+```markdown
+CITY_LON=67.0011
+```
+```
+
+---
+
+### 2. Add Dashboard Screenshots Section
+
+**Add this after "Features" section:**
+
+```markdown
+## 📸 Dashboard Preview
+
+| Full Dashboard | 3-Day Forecast | SHAP Importance |
+|----------------|----------------|-----------------|
+| ![Dashboard](images/dashboard_full.png) | ![Forecast](images/forecast_chart.png) | ![SHAP](images/shap_importance.png) |
+
+*Real-time AQI monitoring dashboard with 3-day forecast and SHAP explainability*
+
+---
+
+## 📊 Exploratory Data Analysis
+
+![EDA Time Series](images/eda_timeseries.png)
+
+*Historical AQI trend with hazard thresholds (Moderate: 100, Hazardous: 150)*
+```
+
+---
+
+### 3. Add Live Dashboard Badge at Top
+
+**Add this after title:**
+
+```markdown
+[![Live Dashboard](https://img.shields.io/badge/🚀_Live_Dashboard-Streamlit-FF4B4B?style=for-the-badge)](https://karachi-aqi-monitor.streamlit.app/)
+```
+
+---
+
+## ✅ Complete Corrected README (Final Version)
+
+Yeh lo **complete fixed README** — copy-paste karo:
+
+```markdown
+# 🌫️ AQI Predictor — Serverless MLOps Pipeline for Air Quality Forecasting
+
+[![Live Dashboard](https://img.shields.io/badge/🚀_Live_Dashboard-Streamlit-FF4B4B?style=for-the-badge)](https://karachi-aqi-monitor.streamlit.app/)
 [![Python 3.10](https://img.shields.io/badge/Python-3.10-blue.svg)](https://www.python.org/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=flat&logo=Streamlit&logoColor=white)](https://streamlit.io/)
 [![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-2088FF?style=flat&logo=github-actions&logoColor=white)](https://github.com/features/actions)
-[![TensorFlow](https://img.shields.io/badge/TensorFlow-FF6F00?style=flat&logo=tensorflow&logoColor=white)](https://tensorflow.org/)
 [![Hopsworks](https://img.shields.io/badge/Hopsworks-FF6B00?style=flat&logo=apache&logoColor=white)](https://www.hopsworks.ai/)
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-Streamlit-brightgreen)](https://karachi-aqi-monitor.streamlit.app/)
 
 > **🏆 10Pearls Internship Program | Cohort 8 | Abdul Qadeer | Sukkur IBA University**
 
-An **end-to-end serverless Machine Learning pipeline** that predicts the Air Quality Index (AQI) for **Karachi, Sindh, Pakistan** for the next 3 days. The system automates data ingestion, feature storage, model training, and deployment using a **production-grade MLOps architecture**.
+An **end-to-end serverless Machine Learning pipeline** that predicts the Air Quality Index (AQI) for **Karachi, Sindh, Pakistan** for the next 3 days.
 
 ---
 
@@ -20,6 +85,24 @@ An **end-to-end serverless Machine Learning pipeline** that predicts the Air Qua
 | 🚀 **Live Dashboard** | [karachi-aqi-monitor.streamlit.app](https://karachi-aqi-monitor.streamlit.app/) |
 | 📂 **GitHub Repository** | [github.com/Abdul-Qadeerr/10pearls-AQI](https://github.com/Abdul-Qadeerr/10pearls-AQI) |
 | 📊 **Hopsworks Feature Store** | `aqi_predictor_10shine` |
+
+---
+
+## 📸 Dashboard Preview
+
+| Full Dashboard | 3-Day Forecast | SHAP Importance |
+|----------------|----------------|-----------------|
+| ![Dashboard](images/dashboard_full.png) | ![Forecast](images/forecast_chart.png) | ![SHAP](images/shap_importance.png) |
+
+*Real-time AQI monitoring dashboard with 3-day forecast and SHAP explainability*
+
+---
+
+## 📊 Exploratory Data Analysis
+
+![EDA Time Series](images/eda_timeseries.png)
+
+*Historical AQI trend with hazard thresholds (Moderate: 100, Hazardous: 150)*
 
 ---
 
@@ -148,7 +231,6 @@ aqi-predictor/
 
 ---
 
-
 ## 🛠️ Setup Instructions
 
 ### Prerequisites
@@ -169,7 +251,7 @@ HOPSWORKS_API_KEY=your_hopsworks_key
 CITY_NAME=Karachi
 CITY_LAT=24.8607
 CITY_LON=67.0011
-
+```
 
 ### Run Commands
 
@@ -225,3 +307,4 @@ The pipeline is fully parameterized — just change `CITY_NAME`, `CITY_LAT`, and
 ## 📄 License
 
 This project is part of the **10Pearls Shine Internship Program (Cohort 8)**.
+```
