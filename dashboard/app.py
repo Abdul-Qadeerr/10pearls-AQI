@@ -27,13 +27,59 @@ st.markdown("""
         margin-bottom: 1.5rem;
         text-align: center;
     }
-    .hazard-good { background: linear-gradient(135deg, #00b09b, #96c93d); padding: 1rem; border-radius: 10px; color: white; text-align: center; font-weight: bold; }
-    .hazard-moderate { background: linear-gradient(135deg, #f2994a, #f2c94c); padding: 1rem; border-radius: 10px; color: white; text-align: center; font-weight: bold; }
-    .hazard-unhealthy { background: linear-gradient(135deg, #eb3349, #f45c43); padding: 1rem; border-radius: 10px; color: white; text-align: center; font-weight: bold; }
-    .hazard-hazardous { background: linear-gradient(135deg, #7f00ff, #e100ff); padding: 1rem; border-radius: 10px; color: white; text-align: center; font-weight: bold; }
-    [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+    .hazard-good { 
+        background: linear-gradient(135deg, #00b09b, #96c93d); 
+        padding: 1rem; 
+        border-radius: 10px; 
+        color: white; 
+        text-align: center; 
+        font-weight: bold; 
     }
+    .hazard-moderate { 
+        background: linear-gradient(135deg, #f2994a, #f2c94c); 
+        padding: 1rem; 
+        border-radius: 10px; 
+        color: white; 
+        text-align: center; 
+        font-weight: bold; 
+    }
+    .hazard-unhealthy { 
+        background: linear-gradient(135deg, #eb3349, #f45c43); 
+        padding: 1rem; 
+        border-radius: 10px; 
+        color: white; 
+        text-align: center; 
+        font-weight: bold; 
+    }
+    .hazard-hazardous { 
+        background: linear-gradient(135deg, #7f00ff, #e100ff); 
+        padding: 1rem; 
+        border-radius: 10px; 
+        color: white; 
+        text-align: center; 
+        font-weight: bold; 
+    }
+    
+    /* Sidebar - Dark Background with White Text */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+    }
+    [data-testid="stSidebar"] .stMarkdown,
+    [data-testid="stSidebar"] .stMetric,
+    [data-testid="stSidebar"] .stMetric label,
+    [data-testid="stSidebar"] .stMetric value,
+    [data-testid="stSidebar"] .stAlert,
+    [data-testid="stSidebar"] .stButton button {
+        color: #ffffff !important;
+    }
+    [data-testid="stSidebar"] .stAlert {
+        background-color: rgba(0,0,0,0.3) !important;
+    }
+    [data-testid="stSidebar"] .stButton button {
+        background-color: #3b82f6;
+        color: white !important;
+    }
+    
     h1, h2, h3 {
         font-weight: 600 !important;
     }
@@ -423,17 +469,13 @@ if display_cols:
     st.dataframe(recent_data, use_container_width=True, hide_index=True)
 
 # ── 11. FOOTER ─────────────────────────────────────────────────────────────────
-st.markdown("---")
-st.markdown(
-    """
-    <div style='text-align: center; color: #666; padding: 1rem;'>
-        <p>🔬 <strong>Karachi AQI Predictive System</strong> | End-to-End Serverless MLOps Pipeline</p>
-        <p>🤖 Random Forest Model | 📡 Real-Time API Integration | 🧬 SHAP Explainability</p>
-        <p style='font-size: 0.8rem;'>© 2026 10Pearls Internship Cohort 8 | IBA Sukkur University</p>
-    </div>
-    """, 
-    unsafe_allow_html=True
-)
+st.markdown("""
+<div style='text-align: center; color: #666; padding: 1rem;'>
+    <p>🔬 <strong>Karachi AQI Predictive System</strong> | End-to-End Serverless MLOps Pipeline</p>
+    <p>🤖 Random Forest Model | 📡 Real-Time API Integration | 🧬 SHAP Explainability</p>
+    <p style='font-size: 0.8rem;'>© 2026 10Pearls Internship Cohort 8 | IBA Sukkur University</p>
+</div>
+""", unsafe_allow_html=True)
 
 # ── 12. REFRESH BUTTON ─────────────────────────────────────────────────────────
 st.sidebar.markdown("---")
