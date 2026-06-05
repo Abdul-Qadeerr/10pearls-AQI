@@ -59,6 +59,10 @@ if batch_data is None or batch_data.empty:
     })
 
 batch_data.columns = [c.lower() for c in batch_data.columns]
+# Extract hour from timestamp if not present (fixes hourly chart)
+if "hour" not in batch_data.columns and "timestamp" in batch_data.columns:
+    batch_data["timestamp"] = pd.to_datetime(batch_data["timestamp"], errors="coerce")
+    batch_data["hour"] = batch_data["timestamp"].dt.hour
 
 # ── 2. LOAD MODELS ────────────────────────────────────────────────────────────
 model_search_dirs = [
